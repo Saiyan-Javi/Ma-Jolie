@@ -1,38 +1,43 @@
 from datetime import datetime, timedelta
 import math
+import statistics
 
 def calcular_bloques_estudio(fecha_limite, horas_totales, dias_a_invertir, hora_inicio_pref, hora_fin_pref):
-    """
-    Calcula y distribuye los bloques de trabajo antes de la fecha límite.
-    """
-    hoy = datetime.now()
     bloques_generados = []
     
-    # 1. ¿Cuántos días faltan realmente?
-    dias_restantes = (fecha_limite - hoy).days
-    
-    if dias_restantes < dias_a_invertir:
-        return "Error: No hay suficientes días antes de la entrega."
+    # REGLA DE ORO: El día de la entrega se deja libre. 
+    # El último día para estudiar es un día ANTES de la fecha límite.
+    fecha_maxima_estudio = fecha_limite - timedelta(days=1)
+    fecha_maxima_estudio = fecha_maxima_estudio.replace(hour=23, minute=59, second=59)
 
-    # 2. Calcular cuántas horas por día (Distribución uniforme para empezar)
-    # Por ejemplo: 10 horas totales en 5 días = 2 horas por día
+    hoy = datetime.now()
+
+    if hoy > fecha_limite:
+        return "Error: La fecha límite ya pasó."
+    
+    # Calculamos cuántas horas por día tocan
     horas_por_dia = horas_totales / dias_a_invertir
-    
-    # 3. Restricción: Validar que las horas por día quepan en la ventana preferida
-    ventana_disponible = hora_fin_pref - hora_inicio_pref
-    if horas_por_dia > ventana_disponible:
-        return f"Error: Quieres hacer {horas_por_dia}h diarias, pero tu ventana es de solo {ventana_disponible}h."
+    ventana_diaria = hora_fin_pref - hora_inicio_pref
 
-    # 4. Generar los bloques (Acomodar los horarios)
-    # Seleccionamos los días (por ejemplo, los días inmediatamente anteriores a la entrega)
-    for i in range(dias_a_invertir):
-        # Retrocedemos desde la fecha límite
-        dia_asignado = fecha_limite - timedelta(days=(i + 1))
+    if horas_por_dia > ventana_diaria:
+        return f"Error: Quieres estudiar {horas_por_dia}h al día, pero tu ventana es de solo {ventana_diaria}h."
+
+    dias_asignados = 0
+    dia_iteracion = hoy
+
+    while dias_asignados < dias_a_invertir:
+        # Verificamos si nos pasamos del día máximo permitido (día antes de la entrega)
+        if dia_iteracion.date() > fecha_maxima_estudio.date():
+            return "Error: No hay suficientes días antes de la fecha límite (dejando el día de entrega libre)."
         
-        # Construimos la fecha y hora exacta de inicio y fin para ese día
-        inicio_bloque = dia_asignado.replace(hour=hora_inicio_pref, minute=0, second=0)
+        inicio_bloque = dia_iteracion.replace(hour=hora_inicio_pref, minute=0, second=0, microsecond=0)
         
-        # Sumamos las horas calculadas (usando math.modf para separar horas y minutos si hay decimales)
+        # Si hoy ya pasó la hora preferida de inicio, saltamos a mañana
+        if dia_iteracion.date() == hoy.date() and hoy.hour >= hora_inicio_pref:
+            dia_iteracion += timedelta(days=1)
+            continue
+
+        # Usamos tu lógica de math.modf para separar horas y minutos exactos
         fraccion_minutos, horas_enteras = math.modf(horas_por_dia)
         fin_bloque = inicio_bloque + timedelta(hours=int(horas_enteras), minutes=int(fraccion_minutos * 60))
         
@@ -41,26 +46,32 @@ def calcular_bloques_estudio(fecha_limite, horas_totales, dias_a_invertir, hora_
             "fin": fin_bloque
         })
         
-    # Ordenamos cronológicamente
-    bloques_generados.sort(key=lambda x: x["inicio"])
-    
+        dias_asignados += 1
+        dia_iteracion += timedelta(days=1)
+
     return bloques_generados
 
-# --- PRUEBA DEL ALGORITMO ---
-if __name__ == "__main__":
-    # Cambiamos la entrega para la próxima semana (ej. 3 de abril) para tener margen de tiempo
-    proximo_viernes = datetime(2026, 4, 3, 23, 59) 
+def predecir_siguiente_ciclo(fechas_inicio):
+    # Si hay menos de 2 registros, no podemos calcular un intervalo. 
+    # Asumimos el estándar médico de 28 días y margen de 2 días.
+    if len(fechas_inicio) < 2:
+        if len(fechas_inicio) == 1:
+            return fechas_inicio[0] + timedelta(days=28), 2
+        return None, None
+
+    # Calculamos los intervalos en días entre cada periodo
+    intervalos = [(fechas_inicio[i] - fechas_inicio[i-1]).days for i in range(1, len(fechas_inicio))]
+
+    # Aplicamos la estadística matemática
+    promedio_dias = statistics.mean(intervalos)
     
-    print("Calculando horario de estudio...")
-    # 10 horas totales, en 4 días, de 19:00 a 22:00 hrs
-    mi_horario = calcular_bloques_estudio(proximo_viernes, 10, 4, 19, 22)
+    # Si solo hay 2 fechas (1 intervalo), la desviación estándar da error, forzamos a 2 días
+    desviacion = 2 if len(intervalos) == 1 else statistics.stdev(intervalos)
+        
+    # Calculamos la fecha del próximo ciclo sumando el promedio al último registro
+    fecha_predicha = fechas_inicio[-1] + timedelta(days=int(promedio_dias))
     
-    # Validamos qué nos devolvió la función antes de imprimir
-    if isinstance(mi_horario, str):
-        # Si es un texto, significa que devolvió un mensaje de error
-        print("⚠️ ALERTA:", mi_horario)
-    else:
-        # Si no es texto, es nuestra lista de bloques y la imprimimos
-        print("✅ ¡Horario generado con éxito!")
-        for bloque in mi_horario:
-            print(f"Estudiar desde {bloque['inicio'].strftime('%Y-%m-%d %H:%M')} hasta {bloque['fin'].strftime('%Y-%m-%d %H:%M')}")
+    # Redondeamos la desviación para tener un margen en días enteros
+    margen_dias = max(1, int(round(desviacion))) 
+    
+    return fecha_predicha, margen_dias
