@@ -226,7 +226,7 @@
         
         async function completarPomodoroTrampa() {
             cerrarPomodoro();
-            const res = await fetch(`http://127.0.0.1:8000/completar-bloque/${tareaActivaPomodoro}`, { method: 'POST' });
+            const res = await fetch(`https://ma-jolie.onrender.com/completar-bloque/${tareaActivaPomodoro}`, { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
                 alert(`¡Excelente trabajo! 🎉 Se marcó como completada y ganaste 10 Trigos 🌾.\nBalance total: ${data.trigos_actuales} Trigos.`);
@@ -238,7 +238,7 @@
         // LÓGICA DEL PERFIL Y LA TIENDA
         async function cargarPerfil() {
             if(!usuarioActual) return;
-            const res = await fetch(`http://127.0.0.1:8000/perfil/${usuarioActual}`);
+            const res = await fetch(`https://ma-jolie.onrender.com/perfil/${usuarioActual}`);
             const data = await res.json();
             document.getElementById('top-trigos-balance').innerText = data.trigos;
             document.getElementById('tienda-trigos-balance').innerText = data.trigos;
@@ -253,7 +253,7 @@
             const conf = confirm(`¿Quieres gastar ${costo} Trigos en "${nombrePremio}"?`);
             if(!conf) return;
             
-            const res = await fetch('http://127.0.0.1:8000/comprar-recompensa/', {
+            const res = await fetch('https://ma-jolie.onrender.com/comprar-recompensa/', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ creador: usuarioActual, costo: costo, nombre_premio: nombrePremio })
             });
@@ -317,11 +317,11 @@
             if(!usuarioActual) return;
             
             // 1. Buscamos invitaciones de tareas
-            const resInv = await fetch(`http://127.0.0.1:8000/mis-invitaciones/${usuarioActual}`);
+            const resInv = await fetch(`https://ma-jolie.onrender.com/mis-invitaciones/${usuarioActual}`);
             const invitaciones = await resInv.json();
             
             // 2. Buscamos alertas de tienda
-            const resTienda = await fetch(`http://127.0.0.1:8000/mis-notificaciones-tienda/${usuarioActual}`);
+            const resTienda = await fetch(`https://ma-jolie.onrender.com/mis-notificaciones-tienda/${usuarioActual}`);
             const notifTienda = await resTienda.json();
 
             const totalNotificaciones = invitaciones.length + notifTienda.length;
@@ -359,12 +359,12 @@
         }
 
         async function marcarNotificacionVista(id_notif) {
-            const res = await fetch(`http://127.0.0.1:8000/marcar-notificacion-tienda/${id_notif}`, { method: 'POST' });
+            const res = await fetch(`https://ma-jolie.onrender.com/marcar-notificacion-tienda/${id_notif}`, { method: 'POST' });
             if(res.ok) { cargarNotificaciones(); }
         }
 
         async function responderInvitacion(id_invitacion, respuesta) {
-            const res = await fetch(`http://127.0.0.1:8000/responder-invitacion/${id_invitacion}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respuesta: respuesta }) });
+            const res = await fetch(`https://ma-jolie.onrender.com/responder-invitacion/${id_invitacion}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respuesta: respuesta }) });
             if(res.ok) { alert(respuesta === 'aceptada' ? "¡Invitación Aceptada! Se agregó a tu calendario." : "Invitación rechazada."); toggleNotificaciones(); cargarNotificaciones(); cargarEventos(); }
         }
 
@@ -381,7 +381,7 @@
                     if (info.event.extendedProps.completado) {
                         const conf = confirm(`La tarea "${info.event.title}" ya fue completada.\n¿Quieres restaurarla? Perderás los 10 Trigos ganados 🌾.`);
                         if (conf) {
-                            const res = await fetch(`http://127.0.0.1:8000/completar-bloque/${info.event.id}`, { method: 'POST' });
+                            const res = await fetch(`https://ma-jolie.onrender.com/completar-bloque/${info.event.id}`, { method: 'POST' });
                             if (res.ok) { cargarEventos(); cargarPerfil(); }
                         }
                     } else {
@@ -396,7 +396,7 @@
                 e.preventDefault();
                 const datos = { titulo: document.getElementById('tit_dir').value, fecha_limite: document.getElementById('lim_dir').value, fecha_inicio: document.getElementById('inicio_dir').value, horas: parseInt(document.getElementById('horas_dir').value), creador: usuarioActual, invitar_pareja: document.getElementById('invitar_pareja_dir').checked };
                 try {
-                    const res = await fetch('http://127.0.0.1:8000/tarea-directa/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+                    const res = await fetch('https://ma-jolie.onrender.com/tarea-directa/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
                     if (res.ok) { alert("¡Tarea agregada!"); document.getElementById('form-directa').reset(); cargarEventos(); } 
                     else { const err = await res.json(); alert("⚠️ " + err.detail); }
                 } catch (error) { alert("⚠️ Error."); }
@@ -406,7 +406,7 @@
                 e.preventDefault();
                 const datos = { titulo: document.getElementById('titulo').value, descripcion: "Web", fecha_limite: document.getElementById('fecha_limite').value, horas_totales: parseInt(document.getElementById('horas').value), dias_a_invertir: parseInt(document.getElementById('dias').value), hora_inicio_pref: parseInt(document.getElementById('hora_inicio').value), hora_fin_pref: parseInt(document.getElementById('hora_fin').value), creador: usuarioActual, invitar_pareja: document.getElementById('invitar_pareja_dist').checked };
                 try {
-                    const res = await fetch('http://127.0.0.1:8000/crear-proyecto/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+                    const res = await fetch('https://ma-jolie.onrender.com/crear-proyecto/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
                     if (res.ok) { alert("¡Horarios generados!"); document.getElementById('form-distribuida').reset(); cargarEventos(); } 
                     else { const err = await res.json(); alert("⚠️ " + err.detail); }
                 } catch (error) { alert("⚠️ Error."); }
@@ -419,16 +419,16 @@
             const panelPrivado = document.getElementById('panel-privado');
             panelPrivado.style.display = (!mostrarPeriodo && !mostrarIntimidad) ? 'none' : 'block';
 
-            const resBloques = await fetch('http://127.0.0.1:8000/mis-bloques/');
+            const resBloques = await fetch('https://ma-jolie.onrender.com/mis-bloques/');
             todosLosBloquesGlobal = await resBloques.json(); 
             
             let prediccion = [];
             if (mostrarPeriodo) {
-                const resPrediccion = await fetch('http://127.0.0.1:8000/prediccion-ciclo/');
+                const resPrediccion = await fetch('https://ma-jolie.onrender.com/prediccion-ciclo/');
                 prediccion = await resPrediccion.json();
             }
 
-            const resPrivados = await fetch('http://127.0.0.1:8000/datos-privados/');
+            const resPrivados = await fetch('https://ma-jolie.onrender.com/datos-privados/');
             const privados = await resPrivados.json();
             const privadosFiltrados = privados.filter(evento => {
                 if (evento.tipo === 'periodo' && !mostrarPeriodo) return false;
@@ -465,7 +465,7 @@
 
         async function registrarEvento(tipoEvento) {
             const fechaSeleccionada = document.getElementById('fecha_privada').value + "T08:00:00"; 
-            const res = await fetch('http://127.0.0.1:8000/registrar-evento/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fecha: fechaSeleccionada, tipo: tipoEvento, creador: usuarioActual }) });
+            const res = await fetch('https://ma-jolie.onrender.com/registrar-evento/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fecha: fechaSeleccionada, tipo: tipoEvento, creador: usuarioActual }) });
             if (res.ok) { alert("¡Registro guardado!"); cargarEventos(); }
         }
     </script>
