@@ -378,6 +378,21 @@
                 eventClick: async function(info) {
                     if (!info.event.id) return; 
                     
+                    // --- NUEVA LÓGICA PARA BORRAR REGISTROS PRIVADOS ---
+                    if (info.event.extendedProps.tipo === 'periodo' || info.event.extendedProps.tipo === 'intimidad') {
+                        const conf = confirm(`¿Te equivocaste y quieres borrar este registro de "${info.event.title}"?`);
+                        if (conf) {
+                            const realId = info.event.id.replace('priv_', '');
+                            // OJO: Asegúrate de poner tu link real de Render aquí:
+                            const res = await fetch(`https://ma-jolie.onrender.com/eliminar-registro-privado/${realId}`, { method: 'DELETE' });
+                            if (res.ok) { 
+                                alert("¡Registro eliminado! La predicción se ha recalulado."); 
+                                cargarEventos(); 
+                            }
+                        }
+                        return; // Salimos para que no se abra el reloj Pomodoro
+                    }
+                    
                     if (info.event.extendedProps.completado) {
                         const conf = confirm(`La tarea "${info.event.title}" ya fue completada.\n¿Quieres restaurarla? Perderás los 10 Trigos ganados 🌾.`);
                         if (conf) {

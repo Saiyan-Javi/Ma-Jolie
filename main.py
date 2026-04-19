@@ -252,6 +252,17 @@ def obtener_datos_privados(db: Session = Depends(get_db)):
     registros = db.query(models.RegistroPersonal).all()
     eventos = []
     for reg in registros:
-        if reg.inicio_periodo: eventos.append({"title": "🩸 Inicio", "start": reg.inicio_periodo.date().isoformat(), "color": "#c0392b", "allDay": True, "tipo": "periodo"})
-        if reg.hubo_relaciones: eventos.append({"title": "❤️", "start": reg.fecha_registro.date().isoformat(), "color": "transparent", "textColor": "#e74c3c", "allDay": True, "tipo": "intimidad"})
+        # Le agregamos el ID con un prefijo "priv_" para que no choque con las tareas
+        if reg.inicio_periodo: eventos.append({"id": f"priv_{reg.id}", "title": "🩸 Inicio", "start": reg.inicio_periodo.date().isoformat(), "color": "#c0392b", "allDay": True, "tipo": "periodo"})
+        if reg.hubo_relaciones: eventos.append({"id": f"priv_{reg.id}", "title": "❤️", "start": reg.fecha_registro.date().isoformat(), "color": "transparent", "textColor": "#e74c3c", "allDay": True, "tipo": "intimidad"})
     return eventos
+
+# NUEVA FUNCIÓN PARA BORRAR
+@app.delete("/eliminar-registro-privado/{registro_id}")
+def eliminar_registro_privado(registro_id: int, db: Session = Depends(get_db)):
+    registro = db.query(models.RegistroPersonal).filter(models.RegistroPersonal.id == registro_id).first()
+    if not registro: 
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+    db.delete(registro)
+    db.commit()
+    return {"mensaje": "Registro eliminado con éxito"}
