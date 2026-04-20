@@ -191,7 +191,6 @@
     </div>
 
     <script>
-        // --- CONSTANTE DEL SERVIDOR ---
         const RENDER_URL = "https://ma-jolie.onrender.com";
 
         let calendar;
@@ -199,7 +198,6 @@
         let todosLosBloquesGlobal = []; 
         let filtroPendientesActual = ""; 
 
-        // LÓGICA DEL POMODORO
         let timerInterval;
         let tiempoRestante = 25 * 60; 
         let tareaActivaPomodoro = null;
@@ -238,7 +236,6 @@
             }
         }
 
-        // LÓGICA DEL PERFIL Y LA TIENDA
         async function cargarPerfil() {
             if(!usuarioActual) return;
             const res = await fetch(`${RENDER_URL}/perfil/${usuarioActual}`);
@@ -271,7 +268,6 @@
             }
         }
 
-        // --- SISTEMA BASE ---
         function cambiarTab(tab) {
             document.querySelectorAll('#titulo-bienvenida ~ .tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(form => form.classList.remove('active'));
@@ -376,8 +372,8 @@
                 eventClick: async function(info) {
                     if (!info.event.id) return; 
 
-                    // --- AQUÍ ESTÁ LA NUEVA LÓGICA DE BORRADO ---
-                    if (info.event.extendedProps.tipo === 'periodo' || info.event.extendedProps.tipo === 'intimidad') {
+                    // --- SOLUCIÓN: Buscamos la palabra 'priv_' directamente en el ID ---
+                    if (String(info.event.id).startsWith('priv_')) {
                         const conf = confirm(`¿Te equivocaste y quieres borrar este registro de "${info.event.title}"?`);
                         if (conf) {
                             const realId = info.event.id.replace('priv_', '');
@@ -389,9 +385,9 @@
                                 alert("⚠️ Hubo un error al borrar el registro.");
                             }
                         }
-                        return; // Evita que se abra el pomodoro después
+                        return; 
                     }
-                    // --------------------------------------------
+                    // -------------------------------------------------------------------
                     
                     if (info.event.extendedProps.completado) {
                         const conf = confirm(`La tarea "${info.event.title}" ya fue completada.\n¿Quieres restaurarla? Perderás los 10 Trigos ganados 🌾.`);
